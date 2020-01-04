@@ -6,14 +6,7 @@ Runnable preview [here](http://htmlpreview.github.io/?https://github.com/nasderi
 
 Results from the various configurations:
 
-| Category                                 | Max |  #@Max | First ... Last                     |
-|------------------------------------------|-----|--------|------------------------------------|
-| States + Possessions                     |  30 |   9984 | FMNVIDCALAKSCOHINCTNMPWVARIASDE    |
-|                                          |     |        | ...                                |
-|                                          |     |        | FMPWVARIASDCTNCALAKSCOHINMNVIDE    |
-| States                                   |  22 |    792 | MIAKSCALARINMNVTNCOHIDE            |
-|                                          |     |        | ...                                |
-|                                          |     |        | WVTNVARINMNCOHIALAKSCAZ            |
-| States + Possessions + Military "States" |  33 | 428160 | FMNCAAKSCOHIALAPARIDCTNMPWVINVASDE |
-|                                          |     |        | ...                                |
-|                                          |     |        | FMPWVINVASDCTNMNCOHIAPALAKSCAARIDE |
+| Word Filter | Letters | Score |
+|-------------|---------|-------|
+| WITHOUT_S   | Raegint |  3898 |
+| ALL_WORDS   | Eainrst |  8681 |
