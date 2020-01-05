@@ -13,7 +13,7 @@ Results from the various configurations:
 
 ## Full score breakdowns
 
-Raegint (3898):
+### Raegint (3898)
 
 | Uniques | Points | Word list
 |---------|--------|----------
