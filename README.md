@@ -11,7 +11,7 @@ Results from the various configurations:
 | WITHOUT_S   | Raegint |  3898 |
 | ALL_WORDS   | Eainrst |  8681 |
 
-Full breakdown of the "Raegint" score:
+## Full score breakdowns
 
 Raegint (3898):
 
