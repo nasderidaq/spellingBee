@@ -11,6 +11,16 @@ Results from the various configurations:
 | WITHOUT_S   | Raegint |  3898 |
 | ALL_WORDS   | Eainrst |  8681 |
 
+## Approach
+
+The code takes a fairly simple approach. It preprocesses the word list checking for validity (minimum length 4, max 7 unique letters, and optionally no 's'), and then scores the word. All words with the same set of unique letters are combined together into a single entry with their point values added together for easy lookup later.
+
+Since there is a restriction that the honeycomb letters must contain a pangram, the program them iterates over every pangram found in the preprocessing step (sets of 7 unique letters - of which there are 7986 total), and turns them into the 7 possible honeycombs (1 for each possible center letter). It then iterates through every combination of remaining unique letters (2^6, or 64 combinations), and simply adds up how many points were found for those sets of unique letters in the preprocessing step. The complete search takes 2-3 seconds.
+
+The solution "Raegint" makes quite a bit of sense. It allows for "ing" and "er" suffixes, as well as "re" prefixes. It is a bit interesting to me that the consonant "R" outperformed the vowels for the mandatory central spot, but I guess vowels are more likely to replace each other when forming words. (The next best is "Naegirt" for 3782 points, also a consonant from the same set of letters.)
+
+Possibly of interest, when running without the "no S" restriction, the results aren't *too* much higher-scoring. The best answer is "Eainrst", with a score of 8681 - only about twice the value!
+
 ## Full score breakdowns
 
 ### Raegint (3898)
