@@ -82,4 +82,4 @@ Possibly of interest, when running without the "no S" restriction, the results a
 
 ## Worst score
 
-The worst score in every category is Xcinopr, generating the minimum possible 14 points (Single pangram, no other words can be formed). There isn't even a tie for worst in any category!
+The worst score in every category is Xcinopr, generating the minimum possible 14 points (Single pangram of length 7 (princox), and no other words can be formed). There isn't even a tie for worst in any category!
