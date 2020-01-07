@@ -6,10 +6,12 @@ Runnable preview [here](https://htmlpreview.github.io/?https://github.com/nasder
 
 Results from the various configurations:
 
-| Word Filter | Letters | Score |
-|-------------|---------|-------|
-| WITHOUT_S   | Raegint |  3898 |
-| ALL_WORDS   | Eainrst |  8681 |
+| Word Filter              | Letters     | Score     |
+|--------------------------|-------------|-----------|
+| ALL_WORDS                |   Eainrst   |    8681   |
+| **WITHOUT_S**            | **Raegint** |  **3898** |
+| MAX_TWO_VOWELS           |   Edinrst   |    6795   |
+| WITHOUT_S_MAX_TWO_VOWELS |   Eadnprt   |    3060   |
 
 ## Approach
 
