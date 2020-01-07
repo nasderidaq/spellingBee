@@ -79,3 +79,7 @@ Possibly of interest, when running without the "no S" restriction, the results a
 | AGINRT  |    167 | airting attiring granita granting gratin grating ingratiating intrigant irrigating irritating narrating nitrating ranting rating ratting taring tarring tarting titrating training triaging
 | EGINRT  |    218 | engirt entering gettering gittern greeting igniter integer interning interring reentering regreeting regretting reignite reigniting reinterring renting retinting retiring retting ringent teetering tentering tiering tittering treeing triggering
 | AEGINRT |    832 | aerating aggregating argentine argentite entertaining entraining entreating garnierite gartering generating gnattier granite gratine gratinee gratineeing greatening ingrate ingratiate integrate integrating intenerating interage intergang interregna intreating iterating itinerating nattering rattening reaggregating reattaining regenerating regranting regrating reinitiating reintegrate reintegrating reiterating retagging retaining retargeting retearing retraining retreating tangerine tangier targeting tattering tearing treating
+
+## Worst score
+
+The worst score in every category is Xcinopr, generating the minimum possible 14 points (Single pangram, no other words can be formed). There isn't even a tie for worst in any category!
