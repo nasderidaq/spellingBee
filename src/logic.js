@@ -11,6 +11,7 @@
 
 {
 	/* Parameters */
+
 	const LETTER_COUNT = 7;
 	const PANGRAM_BONUS = LETTER_COUNT;
 	const MIN_LENGTH = 4;
@@ -26,9 +27,10 @@
 		[WITHOUT_S, 'without \'s\'', true],
 	];
 
-	const EXPECTED_MAX_LETTERS_POINTS_DIGITS = 3;
+	const EXPECTED_MAX_LETTERS_POINTS_DIGITS = 4;
 
 	/* Imports */
+
 	const win = window;
 	const {
 		Math,
@@ -37,75 +39,107 @@
 	} = win;
 	const {max} = Math;
 
-	/* Data structures */
-	const LettersScore = class {
-		constructor(letters) {
-			this.letters = letters;
-			this.points = 0;
-			this.words = [];
-		}
+	/* Helpers */
 
-		add(word) {
-			this.points += WORD_SCORE(word, this.letters);
-			this.words.push(word);
-		}
+	const Uniques = {
+		/* "Uniques" is the term used for the set of unique letters that are used to form words.
+		 * It is represented by a single sorted string. All capital letters in the string are "required", while all lowercase letters are "optional".
+		 * A unique can be decomposed into versions of itself where optional letters are either dropped or become (uppercase) required letters.
+		 *
+		 * e.g. "ESat"
+		 *
+		 * composed of: AEST + AES + EST + ES
+		 * subcomponents can also include: AESt, ESTa, ESa, ESt
+		 *
+		 * NOT composed of: AET, AST, AE, AS, AT, ET, A, E, S, T
+		 * also NOT subcomponents: East, Saet, aest
+		 *
+		 * valid word examples:
+		 * AEST: asset assets east easts eats estate estates seat seats state states taste tastes teas tease teases...
+		 * AES:  ease eases seas...
+		 * EST:  sets tees test tests...
+		 * ES:   sees...
+		 */
 
-		toString() {
-			const points = this.points.toString();
-			return (
-				`${this.letters}${' '.repeat(LETTER_COUNT - this.letters.length)} ` +
-				`(${' '.repeat(max(EXPECTED_MAX_LETTERS_POINTS_DIGITS - points.length, 0))}${points}):` +
-				` ${this.words.join(' ')}`);
-		}
+		split(uniques) {
+			const [, required, optional] = /^([A-Z]*)([a-z]*)$/.exec(uniques);
+			return [required, optional];
+		},
+
+		addToRequired(required, newRequired) {
+			return [...required, ...newRequired.toUpperCase()].sort().join('');
+		},
+
+		decompose(uniques) {
+			const [required, optional] = Uniques.split(uniques);
+			if (optional.length === 0) {
+				return [];
+			}
+			const requiredAndOneOptional = Uniques.addToRequired(required, optional.charAt(0));
+			const remainingOptional = optional.substr(1);
+			return [
+				requiredAndOneOptional + remainingOptional,
+				required + remainingOptional,
+			];
+		},
 	};
 
+	/* Data structures */
+
 	const BeeScore = class {
-		constructor(beeLetters) {
-			this.beeLetters = beeLetters;
-			this.points = 0;
-			this.letters = [];
+		constructor(uniques, points) {
+			this.uniques = uniques;
+			this.points = points;
 		}
 
-		add(lettersScore) {
-			if (lettersScore) {
-				this.points += lettersScore.points;
-				this.letters.push(lettersScore);
+		toString(collection) {
+			return `${this.uniques} (${this.points}):\n\t${this.getUniques(collection).join('\n\t')}`;
+		}
+
+		getUniques(collection) {
+			const lines = [];
+
+			const [required, optional] = Uniques.split(this.uniques);
+			const maxMask = 1 << (LETTER_COUNT - 1);
+			for (let mask = 0; mask < maxMask; mask++) {
+				const subUniques = Uniques.addToRequired(required, optional.split('').filter((letter, j) => {
+					return ((mask >> j) & 1) === 1;
+				}).join(''));
+				const words = collection.uniquesToWords.get(subUniques);
+				if (words) {
+					const points = collection.uniquesToPoints.get(subUniques).toString();
+					lines.push(
+						`${subUniques}${' '.repeat(LETTER_COUNT - subUniques.length)} ` +
+						`(${' '.repeat(max(EXPECTED_MAX_LETTERS_POINTS_DIGITS - points.length, 0))}${points}):` +
+						` ${words.join(' ')}`);
+				}
 			}
-		}
-
-		toString() {
-			return `${this.beeLetters} (${this.points}):\n\t${this.letters.join('\n\t')}`;
+			return lines;
 		}
 	};
 
 	const BeeScoreCollection = class {
 		constructor() {
-			this.lettersScoreByLength = new Array(LETTER_COUNT + 1);
-			for (let i = 0; i <= LETTER_COUNT; i++) {
-				this.lettersScoreByLength[i] = new Map();
-			}
-
+			this.uniquesToWords = new Map();
+			this.uniquesToPoints = new Map();
+			this.pangrams = new Set();
 			this.scores = [];
 		}
 
-		getLettersScore(letters) {
-			return this.lettersScoreByLength[letters.length].get(letters);
-		}
-
-		getOrCreateLettersScore(letters) {
-			const letterScoreAtLength = this.lettersScoreByLength[letters.length];
-			let lettersScore = letterScoreAtLength.get(letters);
-			if (!lettersScore) {
-				lettersScore = new LettersScore(letters);
-				letterScoreAtLength.set(letters, lettersScore);
+		getUniquesPoints(uniques) {
+			let score = this.uniquesToPoints.get(uniques);
+			if (score === undefined) {
+				const childUniques = Uniques.decompose(uniques);
+				if (childUniques.length === 0) {
+					return 0;
+				}
+				score = 0;
+				for (const childUnique of childUniques) {
+					score += this.getUniquesPoints(childUnique);
+				}
+				this.uniquesToPoints.set(uniques, score);
 			}
-			return lettersScore;
-		}
-
-		createBeeScore(beeLetters) {
-			const beeScore = new BeeScore(beeLetters);
-			this.scores.push(beeScore);
-			return beeScore;
+			return score;
 		}
 
 		processWords(words, filter = ALL_WORDS) {
@@ -114,34 +148,37 @@
 				if (length >= MIN_LENGTH && filter(word)) {
 					const letters = word.match(/(.)(?!.*\1)/g).sort().join('');
 					if (letters.length <= LETTER_COUNT) {
-						this.getOrCreateLettersScore(letters).add(word);
+						const uniques = letters.toUpperCase();
+						let words = this.uniquesToWords.get(uniques);
+						if (words === undefined) {
+							words = [];
+							this.uniquesToWords.set(uniques, words);
+						}
+						words.push(word);
+						const previousScore = this.uniquesToPoints.get(uniques) || 0;
+						this.uniquesToPoints.set(uniques, previousScore + WORD_SCORE(word, letters));
+
+						if (letters.length === LETTER_COUNT) {
+							this.pangrams.add(uniques);
+						}
 					}
 				}
 			});
 		}
 
 		enumerateBeePossibilities() {
-			this.lettersScoreByLength[LETTER_COUNT].forEach((lettersScore, letters) => {
+			for (const letters of this.pangrams) {
 				letters.split('').forEach((required, i, splitLetters) => {
 					const remaining = splitLetters.filter((letter, j) => i !== j);
-					const score = this.createBeeScore(required.toUpperCase() + remaining.join(''));
-
-					const maxMask = 1 << (LETTER_COUNT - 1);
-					for (let mask = 0; mask < maxMask; mask++) {
-						const subLetters = [
-							required,
-							...remaining.filter((letter, j) => {
-								return ((mask >> j) & 1) === 1;
-							}),
-						].sort().join('');
-						score.add(this.getLettersScore(subLetters));
-					}
+					const uniques = required + remaining.join('').toLowerCase();
+					this.scores.push(new BeeScore(uniques, this.getUniquesPoints(uniques)));
 				});
-			});
+			}
+			this.scores.sort((a, b) => b.points - a.points);
+
 		}
 
 		getBestBeeScore() {
-			this.scores.sort((a, b) => b.points - a.points);
 			return this.scores[0];
 		}
 
@@ -153,6 +190,7 @@
 	};
 
 	/* UI */
+
 	{
 		const wordFilterSelectContainer = document.createElement('div');
 		document.body.appendChild(wordFilterSelectContainer);
@@ -189,7 +227,7 @@
 			win.words = words;
 
 			/* Output */
-			appendLog(bestBeeScore ? bestBeeScore.toString() : 'no valid scores found');
+			appendLog(bestBeeScore ? bestBeeScore.toString(beeScores) : 'no valid scores found');
 
 			console.log(bestBeeScore);
 			console.log(beeScores);
