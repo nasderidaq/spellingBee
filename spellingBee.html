@@ -9,10 +9,12 @@
 /*
  * https://fivethirtyeight.com/features/can-you-solve-the-vexing-vexillology/
  *
- * Word Filter  Letters  Score
+ * Word Filter              Letters  Score
  *
- * WITHOUT_S    Raegint  3898
- * ALL_WORDS    Eainrst  8681
+ * ALL_WORDS                Eainrst  8681
+ * WITHOUT_S                Raegint  3898
+ * MAX_TWO_VOWELS           Edinrst  6795
+ * WITHOUT_S_MAX_TWO_VOWELS Eadnprt  3060
  */
 
 {
@@ -26,11 +28,18 @@
 		return (length === MIN_LENGTH ? 1 : length) + (letters.length === LETTER_COUNT ? PANGRAM_BONUS : 0);
 	};
 
+	const AND = (...filters) => (word) => filters.every((filter) => filter(word));
+
 	const ALL_WORDS = (word) => true;
 	const WITHOUT_S = (word) => !/s/.test(word);
+	const MAX_TWO_VOWELS = (word) => !/(?:.*?([aeiou])(?!.*\1)){3}/.test(word);
+	const WITHOUT_S_MAX_TWO_VOWELS = AND(WITHOUT_S, MAX_TWO_VOWELS);
+
 	const FILTER_OPTIONS = [
 		[ALL_WORDS, 'all words'],
 		[WITHOUT_S, 'without \'s\'', true],
+		[MAX_TWO_VOWELS, 'max 2 vowels'],
+		[WITHOUT_S_MAX_TWO_VOWELS, 'without \'s\' and max 2 vowels'],
 	];
 
 	const EXPECTED_MAX_LETTERS_POINTS_DIGITS = 4;
@@ -184,14 +193,27 @@
 
 		}
 
-		getBestBeeScore() {
-			return this.scores[0];
+		getBestBeeScores() {
+			const best = this.scores[0];
+			let i = 1;
+			while (i < this.scores.length && this.scores[i].points === best.points) {
+				i++;
+			}
+			return this.scores.slice(0, i);
+		}
+
+		getWorstBeeScores() {
+			const worst = this.scores[this.scores.length - 1];
+			let i = this.scores.length - 2;
+			while (i >= 0 && this.scores[i].points === worst.points) {
+				i--;
+			}
+			return this.scores.slice(i + 1);
 		}
 
 		compute(words, filter) {
 			this.processWords(words, filter);
 			this.enumerateBeePossibilities();
-			return this.getBestBeeScore();
 		}
 	};
 
@@ -224,18 +246,33 @@
 
 			const beeScores = new BeeScoreCollection();
 			const start = Date.now();
-			const bestBeeScore = beeScores.compute(words, filter);
+			beeScores.compute(words, filter);
 			const end = Date.now();
+			const bestBeeScores = beeScores.getBestBeeScores();
+			const worstBeeScores = beeScores.getWorstBeeScores();
 
 			/* Exports */
 			win.beeScores = beeScores;
-			win.bestBeeScore = bestBeeScore;
+			win.bestBeeScores = bestBeeScores;
+			win.worstBeeScores = worstBeeScores;
 			win.words = words;
 
 			/* Output */
-			appendLog(bestBeeScore ? bestBeeScore.toString(beeScores) : 'no valid scores found');
+			if (beeScores.scores.length > 0) {
+				appendLog('BEST\n');
+				for (const best of bestBeeScores) {
+					appendLog(best.toString(beeScores));
+				}
+				appendLog('\nWORST\n');
+				for (const worst of worstBeeScores) {
+					appendLog(worst.toString(beeScores));
+				}
+			} else {
+				appendLog('no valid scores found');
+			}
 
-			console.log(bestBeeScore);
+			console.log('best', bestBeeScores);
+			console.log('worst', worstBeeScores);
 			console.log(beeScores);
 			console.log('Elapsed time (s)', (end - start) / 1000);
 		});
